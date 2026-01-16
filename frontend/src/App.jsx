@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import DirectoryTreePanel from "../components/DirectoryTreePanel";
 import EditorPanel from "../components/EditorPanel";
 import ActivityLogsPanel from "../components/ActivityLogsPanel";
+import ChatWindow from "../components/ChatWindow";
+import ActiveContributers from "../components/ActiveContributers";
 import "./App.css";
 
 export default function Workspace() {
@@ -40,6 +42,22 @@ export default function Workspace() {
   });
 
   const [logs, setLogs] = useState([]);
+  const [chatMessages, setChatMessages] = useState([
+    { id: "m1", author: "Ava", text: "Welcome to the collab space!", time: Date.now() - 1000 * 60 * 2 },
+    { id: "m2", author: "Noah", text: "I will refactor the tree view.", time: Date.now() - 1000 * 60 },
+  ]);
+
+  const contributors = useMemo(
+    () => [
+      { id: "c1", name: "Ava Harper", icon: "🦊", hue: 200 },
+      { id: "c2", name: "Noah Singh", icon: "🐉", hue: 140 },
+      { id: "c3", name: "Mia Chen", icon: "🐝", hue: 45 },
+      { id: "c4", name: "Liam Patel", icon: "🐙", hue: 270 },
+    ],
+    []
+  );
+
+  const [sideTab, setSideTab] = useState("chat");
 
   const handleSelectFile = (file) => {
     setActiveFile(file);
@@ -74,9 +92,21 @@ export default function Workspace() {
     ]);
   };
 
+  const handleSendChat = (text) => {
+    const newMessage = {
+      id: crypto.randomUUID(),
+      author: "You",
+      text,
+      time: Date.now(),
+    };
+    setChatMessages((prev) => [...prev, newMessage]);
+  };
+
   return (
     <div className="workspace-shell">
-      <div className="workspace-grid">
+      <ActiveContributers users={contributors} variant="strip" />
+
+      <div className="workspace-grid workspace-grid--main">
         <aside className="workspace-column workspace-column--nav">
           <DirectoryTreePanel
             tree={mockTree}
@@ -93,8 +123,31 @@ export default function Workspace() {
           />
         </section>
 
-        <aside className="workspace-column workspace-column--log">
-          <ActivityLogsPanel logs={logs} />
+        <aside className="workspace-column workspace-column--side">
+          <div className="side-tabs">
+            <button
+              type="button"
+              className={`side-tab ${sideTab === "chat" ? "is-active" : ""}`}
+              onClick={() => setSideTab("chat")}
+            >
+              Messages
+            </button>
+            <button
+              type="button"
+              className={`side-tab ${sideTab === "logs" ? "is-active" : ""}`}
+              onClick={() => setSideTab("logs")}
+            >
+              Logs
+            </button>
+          </div>
+
+          <div className="side-panel">
+            {sideTab === "chat" ? (
+              <ChatWindow messages={chatMessages} onSend={handleSendChat} />
+            ) : (
+              <ActivityLogsPanel logs={logs} />
+            )}
+          </div>
         </aside>
       </div>
     </div>
